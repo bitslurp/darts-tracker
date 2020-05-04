@@ -63,5 +63,6 @@ buck-out/
 default.realm
 
 default.realm.lock
+default.realm.note
 default.realm.management/**/*
 .realm/**/*
