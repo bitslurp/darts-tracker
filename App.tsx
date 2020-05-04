@@ -6,10 +6,11 @@ import {
 } from 'react-native-paper';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import CreateMatchScreen from './src/components/pages/create-match-screen';
-import MainMenuScreen from './src/components/pages/main-menu-screen';
-import N01Screen from './src/components/pages/n01-screen';
-import N01MatchScreen from './src/components/pages/n01-match-screen';
+import CreateMatchScreen from './src/components/screens/create-match-screen';
+import MainMenuScreen from './src/components/screens/main-menu-screen';
+import DartsMatchesScreen from './src/components/screens/darts-matches-screen';
+import DartsMatchScreen from './src/components/screens/n01-match-screen';
+import PlayerSelectionScreen from './src/components/screens/player-selection-screen';
 
 const Stack = createStackNavigator();
 export const App: FunctionComponent = () => {
@@ -23,18 +24,23 @@ export const App: FunctionComponent = () => {
             options={{ headerShown: false }}
           />
           <Stack.Screen
+            name="DartsMatchesScreen"
+            component={DartsMatchesScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
             name="CreateMatchScreen"
             component={CreateMatchScreen}
             options={{ headerShown: false }}
           />
           <Stack.Screen
-            name="N01Screen"
-            component={N01Screen}
+            name="PlayerSelectionScreen"
+            component={PlayerSelectionScreen}
             options={{ headerShown: false }}
           />
           <Stack.Screen
-            name="N01MatchScreen"
-            component={N01MatchScreen}
+            name="DartsMatch"
+            component={DartsMatchScreen}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>

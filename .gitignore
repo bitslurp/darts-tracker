@@ -59,3 +59,9 @@ buck-out/
 /ios/Pods/
 
 .jest/**/*
+
+default.realm
+
+default.realm.lock
+default.realm.management/**/*
+.realm/**/*

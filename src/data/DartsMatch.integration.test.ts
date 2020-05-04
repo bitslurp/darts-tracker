@@ -1,34 +1,16 @@
-import Realm, { UpdateMode } from 'realm';
-import { playerSchema } from './Player';
-import { ThrowValueSchema } from './darts-game-models/ThrowValue';
-import { DartsScoreCardSchema } from './darts-game-models/DartsScoreCard';
-import { DartsGameSchema } from './DartsGame';
-import { TurnSchema } from './darts-game-models/Turn';
-import DartsMatch, {
-  DartsMatchSchema,
-  DartsMatchScoreSchema,
-  DartsMatchModel,
-} from './DartsMatch';
-import { DartsGameSetSchema, DartsSetStatSchema } from './Set';
+import Realm from 'realm';
+import DartsMatch, { DartsMatchModel } from './DartsMatch';
 import { playerA, playerB } from './__fixtures__/Player';
 import { BullseyeTarget } from './Throw';
+import { RealmSchema } from './realm';
 
 describe('DartsMatch Model - Integration', () => {
   let realm: Realm;
 
   beforeEach(() => {
     realm = new Realm({
-      schema: [
-        playerSchema,
-        ThrowValueSchema,
-        DartsScoreCardSchema,
-        DartsGameSchema,
-        TurnSchema,
-        DartsMatchSchema,
-        DartsGameSetSchema,
-        DartsSetStatSchema,
-        DartsMatchScoreSchema,
-      ],
+      path: '.realm/match',
+      schema: RealmSchema,
       deleteRealmIfMigrationNeeded: true,
       inMemory: true,
     });
@@ -39,6 +21,10 @@ describe('DartsMatch Model - Integration', () => {
       realm.deleteAll();
       done();
     });
+  });
+
+  afterAll(() => {
+    realm.close();
   });
 
   it('should create game', done => {
@@ -74,7 +60,7 @@ describe('DartsMatch Model - Integration', () => {
       const matches2 = realm.objects<DartsMatchModel>('DartsMatch');
       const match = matches2[0];
       expect(DartsMatch.activePlayerName(match)).toBe('Player B');
-      expect(DartsMatch.activeSetStats(match).setStats[0].oneFourties).toBe(1);
+      expect(DartsMatch.activeSetStats(match, playerA).oneFourties).toBe(1);
       done();
     });
   });

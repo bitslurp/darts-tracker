@@ -120,3 +120,10 @@ export class BullseyeTarget implements BoardValue {
 }
 
 export type BoardPosition = BullseyeTarget | NumberTarget | Miss;
+
+export default {
+  of: NumberTarget.of,
+  miss: new Miss(),
+  innerBull: BullseyeTarget.inner,
+  outerBull: BullseyeTarget.outter,
+};

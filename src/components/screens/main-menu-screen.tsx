@@ -10,7 +10,9 @@ interface MenuScreenProps {
 const MainMenuScreen: FunctionComponent<MenuScreenProps> = ({ navigation }) => {
   return (
     <GeneralScreenTemplate navigation={navigation} title="Darts Tracker">
-      <Button mode="outlined" onPress={() => navigation.navigate('N01Screen')}>
+      <Button
+        mode="outlined"
+        onPress={() => navigation.navigate('DartsMatchesScreen')}>
         Play Darts
       </Button>
     </GeneralScreenTemplate>

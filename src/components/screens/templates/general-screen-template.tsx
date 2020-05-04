@@ -18,6 +18,7 @@ interface BackTemplateProps {
   onCreate?: () => void;
   onBack?: () => void;
   createButtonIcon?: string;
+  createButtonDisabled?: boolean;
   loading?: boolean;
   displayContent?: boolean;
   secondaryTopNav?: ReactNode;
@@ -35,6 +36,7 @@ export const GeneralScreenTemplate: FunctionComponent<BackTemplateProps> = ({
   secondaryTopNav = null,
   createButtonIcon = 'plus',
   drawerMenuButton = false,
+  createButtonDisabled = false,
   displayContent = true,
   backButton = false,
   onBack,
@@ -42,8 +44,7 @@ export const GeneralScreenTemplate: FunctionComponent<BackTemplateProps> = ({
   <SafeAreaView style={styles.container}>
     <Appbar>
       {backButton ? (
-        <Appbar.Action
-          icon="chevron-left"
+        <Appbar.BackAction
           onPress={() => {
             onBack && onBack();
             navigation.goBack();
@@ -69,6 +70,7 @@ export const GeneralScreenTemplate: FunctionComponent<BackTemplateProps> = ({
       <FAB
         onPress={onCreate}
         icon={createButtonIcon}
+        disabled={createButtonDisabled}
         style={{ position: 'absolute', bottom: 35, right: 35 }}
       />
     )}
@@ -81,7 +83,6 @@ const styles = StyleSheet.create({
     backgroundColor: DarkTheme.colors.background,
   },
   screenContent: {
-    marginHorizontal: '2%',
     flex: 1,
   },
 });

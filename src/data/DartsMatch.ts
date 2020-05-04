@@ -1,11 +1,12 @@
 import DartsGame, { DartsGameModel } from './DartsGame';
 import { List, ObjectSchema } from 'realm';
+import { v4 as uuidv4 } from 'uuid';
 import { Player } from './Player';
 import DartsGameSet, { DartsGameSetModel, DartsSetStats } from './Set';
 import { BoardPosition } from './Throw';
 import { last, compose } from 'ramda';
 
-interface DartsMatchScore {
+export interface DartsMatchPlayerStats {
   player: Player;
   setsWon: number;
   oneEighties: number;
@@ -18,6 +19,7 @@ interface DartsMatchScore {
 }
 
 export interface DartsMatchModel {
+  id: string;
   createdAt: string;
   startingTotal: number;
   setsToWin: number;
@@ -25,14 +27,16 @@ export interface DartsMatchModel {
   sets: List<DartsGameSetModel>;
   players: List<Player>;
   startingPlayerIndex: number;
-  dartsMatchScores: List<DartsMatchScore> | DartsMatchScore[];
+  dartsMatchScores: List<DartsMatchPlayerStats> | DartsMatchPlayerStats[];
 }
 
 // Realm Schemas //
 
 export const DartsMatchSchema: ObjectSchema = {
   name: 'DartsMatch',
+  primaryKey: 'id',
   properties: {
+    id: 'string',
     createdAt: 'date',
     startingTotal: 'int',
     setsToWin: 'int',
@@ -40,12 +44,12 @@ export const DartsMatchSchema: ObjectSchema = {
     sets: 'DartsGameSet[]',
     players: 'Player[]',
     startingPlayerIndex: 'int',
-    dartsMatchScores: 'DartsMatchScore[]',
+    dartsMatchScores: 'DartsMatchPlayerStats[]',
   },
 };
 
-export const DartsMatchScoreSchema: ObjectSchema = {
-  name: 'DartsMatchScore',
+export const DartsMatchPlayerStatsSchema: ObjectSchema = {
+  name: 'DartsMatchPlayerStats',
   properties: {
     player: 'Player',
     setsWon: 'int',
@@ -79,7 +83,7 @@ const activeSet = (dartsMatch: DartsMatchModel): DartsGameSetModel =>
   last(dartsMatch.sets);
 
 const addSet = (dartsMatch: DartsMatchModel): void => {
-  dartsMatch.sets.push(DartsGameSet.getSet(dartsMatch.legsToWin));
+  dartsMatch.sets.push(DartsGameSet.getSet());
   addGameToCurrentSet(dartsMatch);
 };
 
@@ -98,6 +102,12 @@ const activePlayerScore: (dartsMatch: DartsMatchModel) => number = compose(
   activeGame,
 );
 
+const activeGameStatsByPlayer = (dartsMatch: DartsMatchModel, player: Player) =>
+  DartsGame.getStats(activeGame(dartsMatch), player);
+
+/**
+ * @returns the remaining total - taking into account the current go
+ */
 const activePlayerOutstandingScore = compose(
   DartsGame.outstandingScore,
   activeGame,
@@ -112,6 +122,7 @@ const createDartsMatch = (
     startingTotal: 501,
     setsToWin,
     legsToWin,
+    id: uuidv4(),
     sets: [] as any,
     startingPlayerIndex: 0,
     players: players as any,
@@ -134,7 +145,7 @@ const setDartsMatchScores = (dartsMatch: DartsMatchModel) => {
   );
 
   const matchStatistics = dartsMatch.players.map(player => {
-    const matchStats = dartsMatch.sets.reduce<DartsMatchScore>(
+    const matchStats = dartsMatch.sets.reduce<DartsMatchPlayerStats>(
       (stats, set) => {
         const setStats = set.setStats.find(
           st => st.player.name === player.name,
@@ -168,7 +179,7 @@ const setDartsMatchScores = (dartsMatch: DartsMatchModel) => {
   dartsMatch.dartsMatchScores = matchStatistics;
 };
 
-const sumStats = (match: DartsMatchScore, set: DartsSetStats): void => {
+const sumStats = (match: DartsMatchPlayerStats, set: DartsSetStats): void => {
   ['total', 'throws', 'oneEighties', 'oneFourties', 'tons'].forEach(
     key => (match[key] = match[key] + set[key]),
   );
@@ -207,9 +218,18 @@ export default {
       addGameToCurrentSet(dartsMatch);
     }
   },
-  activeSetStats: (dartsMatch: DartsMatchModel) => activeSet(dartsMatch),
+  activeSetStats: (dartsMatch: DartsMatchModel, player: Player) =>
+    activeSet(dartsMatch).setStats.find(
+      stat => stat.player.name === player.name,
+    ),
+
   activePlayerName,
   activePlayerScore,
+  activeGameStatsByPlayer,
+  matchStatsByPlayer: (dartsMatch: DartsMatchModel, player: Player) =>
+    dartsMatch.dartsMatchScores.find(
+      stats => stats.player.name === player.name,
+    ),
   winnerName: (dartsMatch: DartsMatchModel) => {
     const winningStats = dartsMatch.dartsMatchScores.find(
       match => match.setsWon === dartsMatch.setsToWin,
@@ -221,8 +241,43 @@ export default {
 
     return '';
   },
+  players: (dartsMatch: DartsMatchModel) => dartsMatch.players,
+  playerNames: (dartsMatch: DartsMatchModel) =>
+    dartsMatch.players.map(player => player.name),
+
   activePlayerOutstandingScore,
-  activeSetNo: (dartsMatch: DartsMatchModel) => dartsMatch.sets.length,
-  activeSetLegNo: (dartsMatch: DartsMatchModel) =>
+
+  /**
+   * @returns The active set number
+   */
+  activeSetNo: (dartsMatch: DartsMatchModel): number => dartsMatch.sets.length,
+
+  /**
+   *
+   * @param dartsMatch A DartsMatchModel object
+   * @returns A string description of set/leg format for the provided DartsMatchModel argument
+   */
+  matchDescription(dartsMatch: DartsMatchModel): string {
+    const goalPost =
+      dartsMatch.setsToWin === 1
+        ? `${dartsMatch.legsToWin} legs`
+        : `${dartsMatch.setsToWin} sets`;
+
+    return `${dartsMatch.startingTotal} - First to ${goalPost}`;
+  },
+
+  /**
+   * @returns Number of legs in active set
+   */
+  activeSetLegNo: (dartsMatch: DartsMatchModel): number =>
     activeSet(dartsMatch).legs.length,
+
+  /**
+   * Lists the turns of the active players current go
+   * @returns A string representation of the current turn for example: T20, S5
+   */
+  activeTurnSummary: compose(
+    DartsGame.activeTurnSummary,
+    activeGame,
+  ),
 };

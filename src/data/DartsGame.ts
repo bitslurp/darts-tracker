@@ -168,7 +168,7 @@ export default {
       { throws: 0, total: 0, oneEighties: 0, oneFourties: 0, tons: 0 },
     );
 
-    const oneDartAvg = stats.total / stats.throws;
+    const oneDartAvg = stats.throws === 0 ? 0 : stats.total / stats.throws;
 
     return {
       ...stats,
@@ -197,7 +197,8 @@ export default {
     return activeScoreCard(dartsGame).player.name;
   },
 
-  activePlayerScore(dartsGame: DartsGameModel): number {
-    return activeScoreCard(dartsGame).remainingScore;
-  },
+  activePlayerScore: (dartsGame: DartsGameModel): number =>
+    activeScoreCard(dartsGame).remainingScore,
+  activeTurnSummary: (dartsGame: DartsGameModel) =>
+    dartsGame.currentTurn.throws.map(t => t.name).join(', '),
 };

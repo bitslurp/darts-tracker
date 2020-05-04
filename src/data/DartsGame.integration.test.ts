@@ -7,24 +7,17 @@ import {
   BullseyeTarget,
   Miss,
 } from './Throw';
-import { playerSchema, Player } from './Player';
-import { ThrowValueSchema } from './darts-game-models/ThrowValue';
-import { DartsScoreCardSchema } from './darts-game-models/DartsScoreCard';
-import { TurnSchema } from './darts-game-models/Turn';
+import { Player } from './Player';
 import Realm from 'realm';
+import { RealmSchema } from './realm';
 
-describe('DartsGame Model', () => {
+describe('DartsGame Model - Realm Integration', () => {
   let realm: Realm;
 
   beforeEach(() => {
     realm = new Realm({
-      schema: [
-        playerSchema,
-        ThrowValueSchema,
-        DartsScoreCardSchema,
-        DartsGameSchema,
-        TurnSchema,
-      ],
+      path: '.realm/game',
+      schema: RealmSchema,
       deleteRealmIfMigrationNeeded: true,
       inMemory: true,
     });
@@ -43,6 +36,9 @@ describe('DartsGame Model', () => {
     });
   };
 
+  afterAll(() => {
+    realm.close();
+  });
   describe('Multi player', () => {
     it(
       'should not be complete',
